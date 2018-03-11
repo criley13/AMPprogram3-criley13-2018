@@ -6,6 +6,9 @@ import android.os.Bundle;
 
 public class MainActivity extends AppCompatActivity {
     draw mdraw;
+    String TAG = "MainActivity";
+    public static final String ServiceId = "edu.cs4730.nearbyconnectiondemo";  //need a unique value to identify app.
+    public static final int REQUEST_ACCESS_COURSE_LOCATION= 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
