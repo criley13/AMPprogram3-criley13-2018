@@ -1,6 +1,7 @@
 package edu.cs4735.program3;
 
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -18,6 +19,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.gms.nearby.connection.PayloadCallback;
+
 import java.util.Arrays;
 
 
@@ -28,6 +31,8 @@ public class draw extends Fragment {
 
     // track whose turn it is
     int turn =1;
+    int player;
+    String mEndpoint;
 
     // items needed for creating a space to draw on
     ImageView grid;
@@ -38,13 +43,20 @@ public class draw extends Fragment {
     // line colors
     Paint black, red, blue, white;
 
+    PayloadCallback mpc;
+
     // track the filed grid squares
     int gridCheck[]= new int[9];
 
-
-
     public draw() {
         // Required empty public constructor
+    }
+
+    @SuppressLint("ValidFragment")
+    public draw(PayloadCallback payloadCallback, int player,String endpoint) {
+        this.player = player;
+        mpc = payloadCallback;
+        mEndpoint = endpoint;
     }
 
 
@@ -55,6 +67,10 @@ public class draw extends Fragment {
         View myView = inflater.inflate(R.layout.fragment_draw, container, false);
 
         turnLab = myView.findViewById(R.id.turnView);
+        if(turn == player)
+            turnLab.setText("Player 1 (X)/ You");
+        else
+            turnLab.setText("Player 1 (X)");
 
         // initialize the image view and canvas for drawing on
         grid = myView.findViewById(R.id.imageView);
@@ -109,6 +125,8 @@ public class draw extends Fragment {
 
             //Log.e("index", String.valueOf(index));
 
+
+
             // if somewhere in the grid was selected
             if(index != -1) {
                 // if the selected cell has not been selected before
@@ -127,9 +145,14 @@ public class draw extends Fragment {
                             Log.e("1", "1");
                             gridCheck[index] = turn;
                             drawX(index);
+                            //mpc.onPayloadReceived(mEndpoint);
+
                             checkGame(turn);
                             turn = 2;
-                            turnLab.setText("Player 2 (O)");
+                            if(turn == player)
+                                turnLab.setText("Player 2 (O)/ You");
+                            else
+                                turnLab.setText("Player 2 (O)");
 
                         } else if (turn == 2) {
                             Log.e("2", "2");
@@ -137,7 +160,10 @@ public class draw extends Fragment {
                             drawO(index);
                             checkGame(turn);
                             turn = 1;
-                            turnLab.setText("Player 1 (X)");
+                            if(turn == player)
+                                turnLab.setText("Player 1 (X)/ You");
+                            else
+                                turnLab.setText("Player 1 (X)");
                         }
                     }
                 }
