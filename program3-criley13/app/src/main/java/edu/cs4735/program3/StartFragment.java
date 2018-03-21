@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 /**
@@ -29,6 +30,10 @@ public class StartFragment extends Fragment {
     BluetoothAdapter mBluetoothAdapter = null;
     private static final int REQUEST_ENABLE_BT = 2;
 
+    Button aBut, dBut;
+
+    int player;
+
     public StartFragment() {
         // Required empty public constructor
     }
@@ -38,24 +43,60 @@ public class StartFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View myView = inflater.inflate(R.layout.fragment_start, container, false);
+        final View myView = inflater.inflate(R.layout.fragment_start, container, false);
         logger = myView.findViewById(R.id.logger1);
 
+        aBut = myView.findViewById(R.id.agreeBut);
+        dBut = myView.findViewById(R.id.disagreeBut);
+        aBut.setVisibility(View.INVISIBLE);
+        dBut.setVisibility(View.INVISIBLE);
 
         myView.findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mListener != null) //don't call if null, duh...
+                if (mListener != null) //don't call if null, duh... // client
+                {
                     mListener.onFragmentInteraction(2);
+                    aBut.setText("Agree");
+                    dBut.setText("Disagree");
+                    myView.findViewById(R.id.button1).setEnabled(false);
+                    myView.findViewById(R.id.button2).setEnabled(false);
+                }
             }
         });
         myView.findViewById(R.id.button1).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mListener != null) //don't call if null, duh...
+                if (mListener != null) //don't call if null, duh... // host
+                {
                     mListener.onFragmentInteraction(1);
+                    aBut.setText("Player X");
+                    dBut.setText("Player O");
+                    myView.findViewById(R.id.button1).setEnabled(false);
+                    myView.findViewById(R.id.button2).setEnabled(false);
+                }
             }
         });
+
+        aBut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mListener != null) //don't call if null, duh...
+                    mListener.onFragmentInteraction(3);
+                aBut.setEnabled(false);
+                dBut.setEnabled(false);
+            }
+        });
+        dBut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mListener != null) //don't call if null, duh...
+                    mListener.onFragmentInteraction(4);
+                aBut.setEnabled(false);
+                dBut.setEnabled(false);
+            }
+        });
+
 
         // startbt();  //we don't need to turn on bluetooth, nearby will do it for us.
         return myView;
@@ -116,7 +157,7 @@ public class StartFragment extends Fragment {
     }
 
     public void logthis(String msg) {
-        logger.append(msg + "\n");
+        logger.setText(msg);
         Log.d(TAG, msg);
     }
 
@@ -146,4 +187,6 @@ public class StartFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(int id);
     }
+
+
 }

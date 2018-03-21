@@ -4,6 +4,7 @@ package edu.cs4735.program3;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -24,14 +25,18 @@ import com.google.android.gms.nearby.connection.PayloadCallback;
 import java.util.Arrays;
 
 
-public class draw extends Fragment {
+public class draw extends Fragment implements  StartFragment.OnFragmentInteractionListener {
 
     // label for displaying whose turn it is
     TextView turnLab;
 
+    private OnDrawFragmentInteractionListener mListener;
+
     // track whose turn it is
     int turn =1;
-    int player;
+    public int player; // 1 for x, 2 for o
+    public int servCli;    // 1 for server, 2 for client
+
     String mEndpoint;
 
     // items needed for creating a space to draw on
@@ -40,10 +45,13 @@ public class draw extends Fragment {
     final int boardsize = 990;
     Canvas mCanvas;
 
+    boolean gametie = false;
+    boolean gamewin = false;
+
+    boolean GO = false;
     // line colors
     Paint black, red, blue, white;
 
-    PayloadCallback mpc;
 
     // track the filed grid squares
     int gridCheck[]= new int[9];
@@ -53,10 +61,8 @@ public class draw extends Fragment {
     }
 
     @SuppressLint("ValidFragment")
-    public draw(PayloadCallback payloadCallback, int player,String endpoint) {
+    public draw(int player) {
         this.player = player;
-        mpc = payloadCallback;
-        mEndpoint = endpoint;
     }
 
 
@@ -107,7 +113,19 @@ public class draw extends Fragment {
         // fill the array gridcheck with zeros and draw lines on the boards
         Arrays.fill(gridCheck,0);
         resetBoard();
+
+        //getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.container, new StartFragment()).commit();
+
+
+
         return myView;
+    }
+
+    @Override
+    public void onFragmentInteraction(int id) {
+        servCli = id;
+        Log.e("draw", String.valueOf(id));
+        getActivity().getSupportFragmentManager().popBackStack();
     }
 
     class myTouchListener
@@ -115,6 +133,15 @@ public class draw extends Fragment {
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
+
+            // if not the players turn return false aka lock board
+            if(turn!=player) {
+                return false;
+            }
+
+            // if game over lock the board
+            if(GO)
+                return false;
 
             // get the position of the touch
             int x = (int) event.getX();
@@ -125,12 +152,15 @@ public class draw extends Fragment {
 
             //Log.e("index", String.valueOf(index));
 
-
+            // if the grid has been selected lock that gird square
+            if(gridCheck[index] == 1 || gridCheck[index] == 2)
+                return false;
 
             // if somewhere in the grid was selected
             if(index != -1) {
                 // if the selected cell has not been selected before
                 if (gridCheck[index] == 0) {
+
 
                     //redundant check for valid locations
                     if (x >= 0 && x <= 990 && y >= 0 && y <= 990) {
@@ -168,6 +198,7 @@ public class draw extends Fragment {
                     }
                 }
             }
+            mListener.onDrawFragmentInteraction(index+1, player);
             return false;
         }
     }
@@ -269,46 +300,12 @@ public class draw extends Fragment {
     // if the user(s) if they want to play again or exit
     void checkGame(int player){
         if(gameWin(player)){
-            Dialog dialog = null;
-            AlertDialog.Builder builder;
-            builder = new AlertDialog.Builder(getContext());
-            builder.setMessage("Player "+ player + " wins!")
-                    .setCancelable(false)
-                    .setPositiveButton("Exit", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            System.exit(0);
-                        }
-                    }).setNegativeButton("Play Again", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    Arrays.fill(gridCheck,0);
-                    turn = 1;
-                    turnLab.setText("Player 1 (X)");
-                    resetBoard();
-                }
-            });
-            dialog = builder.create();
-            dialog.show();
+            gamewin = true;
+
         }
         else if(gameEnd()){
-            Dialog dialog = null;
-            AlertDialog.Builder builder;
-            builder = new AlertDialog.Builder(getContext());
-            builder.setMessage("Game over, no more moves")
-                    .setCancelable(false)
-                    .setPositiveButton("Exit", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            System.exit(0);
-                        }
-                    }).setNegativeButton("Play Again", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    Arrays.fill(gridCheck,0);
-                    turn = 1;
-                    turnLab.setText("Player 1 (X)");
-                    resetBoard();
-                }
-            });
-            dialog = builder.create();
-            dialog.show();
+            gametie = true;
+
         }
     }
 
@@ -446,4 +443,30 @@ public class draw extends Fragment {
         mCanvas.drawLine(0, 330, 990, 330, black);
         mCanvas.drawLine(0, 660, 990, 660, black);
     }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnDrawFragmentInteractionListener) {
+            mListener = (OnDrawFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
+    /**
+     * interface for returning the selected grid square
+     */
+    public interface OnDrawFragmentInteractionListener {
+        void onDrawFragmentInteraction(int id, int player);
+    }
+
+
 }
